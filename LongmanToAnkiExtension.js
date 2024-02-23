@@ -1,28 +1,46 @@
-// Script Name: LongmanToAnkiExtension.js
+async findLongman(word) {
+    const maxexample = this.maxexample;
+    let notes = [];
 
-function getDefinition(word) {
-    // Define the URL pattern for Longman Dictionary searches
-    const queryURL = `https://www.ldoceonline.com/dictionary/${word}`;
+    if (!word) return notes;
 
-    fetch(queryURL)
-        .then(response => response.text())
-        .then(html => {
-            // Parse the HTML to find the definition
-            // This is a simplistic approach; actual implementation may require more robust HTML parsing
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const definition = doc.querySelector('.definition').innerText;
-
-            // Display the definition or further process it for Anki
-            console.log(definition);
-
-            // Here, you'd add functionality to format this definition and
-            // send it to Anki, either via AnkiConnect or by generating a suitable import file
-        })
-        .catch(err => {
-            console.error('Error fetching definition:', err);
+    // Updated URL for Longman Dictionary
+    const base = 'https://www.ldoceonline.com/dictionary/';
+    const url = base + encodeURIComponent(word);
+    let doc = '';
+    try {
+        let data = await api.fetch(url);
+        let parser = new DOMParser();
+        doc = parser.parseFromString(data, "text/html");
+    } catch (err) {
+        return null;
+    }
+    
+    // Example of adjusting to Longman's structure (conceptual)
+    // You'll need to inspect the page and use the correct selectors
+    let expression = word;
+    let reading = doc.querySelector('.PRON')?.innerText || 'no pronunciation';
+    
+    // Assuming Longman's structure for definitions and examples
+    let definitions = [];
+    doc.querySelectorAll('.Sense').forEach((sense) => {
+        let def = sense.querySelector('.DEF')?.innerText || '';
+        let examples = sense.querySelectorAll('.EXAMPLE').forEach((ex) => {
+            def += ` <li>${ex.innerText}</li>`; // Conceptual: adjust based on actual structure
         });
-}
+        definitions.push(`<span class="tran">${def}</span>`);
+    });
 
-// Example usage
-getDefinition('example');
+    // The rest of your processing and note construction remains similar
+    let css = this.renderCSS();
+    notes.push({
+        css,
+        expression,
+        reading,
+        // Other details as extracted
+        definitions,
+        // Assuming audios and other details are handled similarly
+    });
+
+    return notes;
+}
