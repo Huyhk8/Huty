@@ -1,0 +1,65 @@
+/* global api */
+class enen_Longman {
+    constructor() {
+        this.maxexample = 2; // Max number of examples to fetch
+        this.word = ''; // The word to find
+    }
+
+    async displayName() {
+        return 'Longman EN->EN Dictionary';
+    }
+
+    setOptions(options) {
+        this.options = options;
+        if (options.maxexample) {
+            this.maxexample = options.maxexample;
+        }
+    }
+
+    async findTerm(word) {
+        this.word = word;
+        let notes = [];
+
+        const url = `https://www.ldoceonline.com/dictionary/${encodeURIComponent(word)}`;
+        try {
+            let data = await api.fetch(url); // Assuming 'api.fetch' is an asynchronous function capable of HTTP GET requests.
+            let parser = new DOMParser();
+            let doc = parser.parseFromString(data, "text/html");
+
+            // Example of extracting the pronunciation
+            let ipa = doc.querySelector('.pron-ipa') ? doc.querySelector('.pron-ipa').textContent : 'No IPA found';
+
+            // Extracting definitions
+            let definitionElements = doc.querySelectorAll('.dictionary .entry .sense');
+            let definitions = [];
+            definitionElements.forEach((element, index) => {
+                if (index < this.maxexample) { // Limit the number of definitions based on maxexample
+                    let definition = element.querySelector('.DEF').textContent;
+                    let exampleElements = element.querySelectorAll('.EXAMPLE');
+                    let examples = [];
+                    exampleElements.forEach(example => {
+                        examples.push(`<li class='sent'><span class='eng_sent'>${example.textContent}</span></li>`);
+                    });
+                    let examplesHTML = examples.length > 0 ? `<ul class="sents">${examples.join('')}</ul>` : '';
+                    definitions.push(`<span class="tran">${definition}</span>${examplesHTML}`);
+                }
+            });
+
+            if (definitions.length > 0) {
+                notes.push({
+                    expression: word,
+                    reading: ipa,
+                    definitions,
+                    // Add additional information or fields if necessary
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching from Longman:', err);
+            // Handle errors or failed requests here
+        }
+
+        return notes; // Return the collected notes
+    }
+
+    // Placeholder for any additional methods or functionality you'd like to add
+}
