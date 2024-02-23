@@ -1,46 +1,37 @@
-async findLongman(word) {
-    const maxexample = this.maxexample;
+async function findLongman(word) {
+    const url = `https://www.longmandictionariesonline.com/dictionary/${encodeURIComponent(word)}`;
     let notes = [];
 
-    if (!word) return notes;
-
-    // Updated URL for Longman Dictionary
-    const base = 'https://www.ldoceonline.com/dictionary/';
-    const url = base + encodeURIComponent(word);
-    let doc = '';
     try {
-        let data = await api.fetch(url);
+        let data = await api.fetch(url); // Assuming 'api.fetch' is a function that can perform an HTTP GET request.
         let parser = new DOMParser();
-        doc = parser.parseFromString(data, "text/html");
+        let doc = parser.parseFromString(data, "text/html");
+
+        // Example of parsing for definitions - you need to adjust selectors based on actual page structure
+        let definitions = doc.querySelectorAll('.Def'); // Adjust '.Def' to the actual selector for definitions
+        let audios = [];
+        // Example for audio - adjust based on actual attributes
+        let pronunciation = doc.querySelector('.pronunciation .audio_play_button');
+        if (pronunciation) {
+            audios.push(pronunciation.getAttribute('data-src-mp3'));
+        }
+
+        definitions.forEach(def => {
+            // Again, this is conceptual. You'll need to adjust based on how Longman structures its definitions.
+            let definitionText = def.innerText.trim();
+            if (definitionText) {
+                notes.push({
+                    expression: word,
+                    reading: '', // Assuming Longman provides IPA or similar, adjust accordingly.
+                    definition: definitionText,
+                    audios // Assuming we've found audio URLs as noted above
+                });
+            }
+        });
     } catch (err) {
+        console.error('Error fetching Longman definition:', err);
         return null;
     }
-    
-    // Example of adjusting to Longman's structure (conceptual)
-    // You'll need to inspect the page and use the correct selectors
-    let expression = word;
-    let reading = doc.querySelector('.PRON')?.innerText || 'no pronunciation';
-    
-    // Assuming Longman's structure for definitions and examples
-    let definitions = [];
-    doc.querySelectorAll('.Sense').forEach((sense) => {
-        let def = sense.querySelector('.DEF')?.innerText || '';
-        let examples = sense.querySelectorAll('.EXAMPLE').forEach((ex) => {
-            def += ` <li>${ex.innerText}</li>`; // Conceptual: adjust based on actual structure
-        });
-        definitions.push(`<span class="tran">${def}</span>`);
-    });
-
-    // The rest of your processing and note construction remains similar
-    let css = this.renderCSS();
-    notes.push({
-        css,
-        expression,
-        reading,
-        // Other details as extracted
-        definitions,
-        // Assuming audios and other details are handled similarly
-    });
 
     return notes;
 }
