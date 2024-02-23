@@ -1,5 +1,5 @@
 async function findLongman(word) {
-    const url = `https://www.longmandictionariesonline.com/dictionary/${encodeURIComponent(word)}`;
+    const url = `https://www.ldoceonline.com//${encodeURIComponent(word)}`;
     let notes = [];
 
     try {
