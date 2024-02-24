@@ -7,7 +7,7 @@ class enen_Vocabulary{
     }
 
     async displayName() {
-        return 'Vocabulary EN->EN Dictionary';
+        return 'Longman EN->EN Dictionary';
     }
 
 
